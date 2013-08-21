@@ -1035,6 +1035,7 @@ main(int argc, char **argv) {
     process_volumes();
     parse_settings();
     ui_init();
+    ui_print("Cannibal Open Touch Recovery\n");
 
     LOGI("Processing arguments.\n");
     get_args(&argc, &argv);
