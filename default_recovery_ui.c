@@ -43,15 +43,15 @@ int TOUCH_NOSHOW_LOG = 0;
 	check the values returned by on screen touch output by click on the 
 	touch panel extremeties
 */
-int maxX=0;		//Set to 0 for debugging
-int maxY=0;		//Set to 0 for debugging
+int maxX=540;           //Set to 0 for debugging
+int maxY=960;		//Set to 0 for debugging
 
 /*
 	the values of following two variables are dependent on specifc device resolution
 	and can be obtained using the outputs of the gr_fb functions
 */
-int resX=0;		//Value obtained from function 'gr_fb_width()'
-int resY=0;		//Value obtained from function 'gr_fb_height()'
+int resX=554;           //Value obtained from function 'gr_fb_width()'
+int resY=962;		//Value obtained from function 'gr_fb_height()'
 
 /*
 	set the following value to restrict the touch boundaries so that
@@ -67,13 +67,13 @@ int touchY=0;
 int minimum_storage=512;
 
 // define what line to draw the battery indicator on
-int BATT_LINE=0;
+int BATT_LINE=1;
 // define the screen position of the battery indicator
 int BATT_POS=RIGHT_ALIGN;
 // define what line to draw the clock on
 int TIME_LINE=1;
 // define the screen position of the clock
-int TIME_POS=RIGHT_ALIGN;
+int TIME_POS=LEFT_ALIGN;
 
 char* MENU_HEADERS[] = { NULL };
 
@@ -103,6 +103,10 @@ int device_perform_action(int which) {
 }
 
 int device_wipe_data() {
+    return 0;
+}
+
+int ui_should_log_stdout() {
     return 0;
 }
 

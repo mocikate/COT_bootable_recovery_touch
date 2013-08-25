@@ -1036,6 +1036,7 @@ main(int argc, char **argv) {
     parse_settings();
     ui_init();
     ui_print("Cannibal Open Touch Recovery\n");
+    ui_print("Modified by carliv@xda\n");
 
     LOGI("Processing arguments.\n");
     get_args(&argc, &argv);

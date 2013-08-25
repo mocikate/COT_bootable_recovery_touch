@@ -134,22 +134,3 @@ int main(int argc, char **argv) {
         return 3;
     }
 }
-
-int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <package>\n", argv[0]);
-        return 2;
-    }
-
-    int result = verify_file(argv[1], &test_key, 1);
-    if (result == VERIFY_SUCCESS) {
-        printf("SUCCESS\n");
-        return 0;
-    } else if (result == VERIFY_FAILURE) {
-        printf("FAILURE\n");
-        return 1;
-    } else {
-        printf("bad return value\n");
-        return 3;
-    }
-}

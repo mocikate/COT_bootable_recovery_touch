@@ -62,11 +62,11 @@ static int gShowBackButton = 0;
 #ifdef BOARD_TS_MAX_ROWS
 #define MAX_ROWS BOARD_TS_MAX_ROWS
 #else
-#define MAX_ROWS 30
+#define MAX_ROWS 32
 #endif
 
-#define MENU_MAX_COLS 64
-#define MENU_MAX_ROWS 250
+#define MENU_MAX_COLS 76
+#define MENU_MAX_ROWS 275
 
 #define MIN_LOG_ROWS 3
 
@@ -300,8 +300,6 @@ static void draw_text_line(int row, const char* t, int align) {
 #define NORMAL_TEXT_COLOR 200, 200, 200, 255
 #define HEADER_TEXT_COLOR NORMAL_TEXT_COLOR
 
-int BATT_LINE, TIME_LINE, BATT_POS, TIME_POS;
-
 // Redraw everything on the screen.  Does not flip pages.
 // Should only be called with gUpdateMutex locked.
 void draw_screen_locked(void)
@@ -342,27 +340,6 @@ void draw_screen_locked(void)
 				draw_icon_locked(gMenuIcon[MENU_SELECT], MENU_ICON[MENU_SELECT].x, MENU_ICON[MENU_SELECT].y );
             			// Setup our text colors
             			gr_color(UICOLOR0, UICOLOR1, UICOLOR2, 255);
-            
-            			// Show battery level
-            			int batt_level = 0;
-            			batt_level = get_batt_stats();
-            			if(batt_level < 21) {
-					gr_color(255, 0, 0, 255);
-				}
-				char batt_text[40];
-				char time_gmt[40];
-			
-				// Get a usable time
-				struct tm *current;
-				time_t now;
-				now = time(0);
-				current = localtime(&now);
-				sprintf(batt_text, "[%d%%]", batt_level);
-				sprintf(time_gmt, "[%02D:%02D GMT]", current->tm_hour, current->tm_min);
-
-       			draw_text_line(BATT_LINE, batt_text, BATT_POS);
-       			draw_text_line(TIME_LINE, time_gmt, TIME_POS);
-
 				gr_color(UICOLOR0, UICOLOR1, UICOLOR2, 255);
 
             		gr_fill(0, (menu_top + menu_sel - menu_show_start) * CHAR_HEIGHT,
@@ -1420,21 +1397,3 @@ void ui_increment_frame() {
         (gInstallingFrame + 1) % ui_parameters.installing_frames;
 }
 
-int get_batt_stats(void) {
-	static int level = -1;
-	
-	char value[4];
-	FILE * capacity = fopen("/sys/class/power_supply/battery/capacity","rt");
-	if (capacity) {
-		fgets(value, 4, capacity);
-		fclose(capacity);
-		level = atoi(value);
-		
-		if (level > 100)
-			level = 100;
-		if (level < 0)
-			level = 0;
-		
-	}
-	return level;
-}

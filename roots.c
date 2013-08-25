@@ -238,7 +238,9 @@ int ensure_path_mounted_at_mount_point(const char* path, const char* mount_point
         return -1;
     }
     if (is_data_media_volume_path(path)) {
-        LOGI("using /data/media for %s.\n", path);
+        if (ui_should_log_stdout()) {
+            LOGI("using /data/media for %s.\n", path);
+        }
         int ret;
         if (0 != (ret = ensure_path_mounted("/data")))
             return ret;
