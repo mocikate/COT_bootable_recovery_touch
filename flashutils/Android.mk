@@ -103,5 +103,5 @@ LOCAL_STATIC_LIBRARIES := libflashutils libmtdutils libmmcutils libbmlutils libc
 LOCAL_FORCE_STATIC_EXECUTABLE := true
 include $(BUILD_EXECUTABLE)
 
-endif # TARGET_ARCH == arm
-endif # !TARGET_SIMULATOR
+endif	# TARGET_ARCH == arm
+endif	# !TARGET_SIMULATOR

@@ -238,9 +238,7 @@ int ensure_path_mounted_at_mount_point(const char* path, const char* mount_point
         return -1;
     }
     if (is_data_media_volume_path(path)) {
-        if (ui_should_log_stdout()) {
-            LOGI("using /data/media for %s.\n", path);
-        }
+        LOGI("using /data/media for %s.\n", path);
         int ret;
         if (0 != (ret = ensure_path_mounted("/data")))
             return ret;
@@ -298,7 +296,7 @@ int ensure_path_mounted_at_mount_point(const char* path, const char* mount_point
     } else {
         // let's try mounting with the mount binary and hope for the best.
         char mount_cmd[PATH_MAX];
-        sprintf(mount_cmd, "mount %s", path);
+        sprintf(mount_cmd, "mount %s", mount_point);
         return __system(mount_cmd);
     }
 

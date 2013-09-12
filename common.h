@@ -23,6 +23,7 @@
 void ui_init();
 
 // Use KEY_* codes from <linux/input.h> or KEY_DREAM_* from "minui/minui.h".
+void ui_cancel_wait_key();
 struct keyStruct *ui_wait_key();            // waits for a key/button press, returns the code
 int ui_key_pressed(int key);  // returns >0 if the code is currently pressed
 int ui_text_visible();        // returns >0 if text log is currently visible
@@ -67,6 +68,7 @@ enum {
   BACKGROUND_ICON_INSTALLING,
   BACKGROUND_ICON_ERROR,
   BACKGROUND_ICON_CLOCKWORK,
+  BACKGROUND_ICON_CID,
   BACKGROUND_ICON_TSCAL,
   BACKGROUND_ICON_FIRMWARE_INSTALLING,
   BACKGROUND_ICON_FIRMWARE_ERROR,

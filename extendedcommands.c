@@ -99,8 +99,20 @@ void write_string_to_file(const char* filename, const char* string) {
     sprintf(tmp, "mkdir -p $(dirname %s)", filename);
     __system(tmp);
     FILE *file = fopen(filename, "w");
-    fprintf(file, "%s", string);
-    fclose(file);
+    if( file != NULL) {
+        fprintf(file, "%s", string);
+        fclose(file);
+    }
+}
+
+/* Only valid reason for this is application recognition so, we'll want to store
+ * these values using the same locations as CWM, regardless of our file
+ * locations. */
+void write_recovery_version() {
+    if(is_data_media()) {
+        write_string_to_file("/sdcard/0/clockworkmod/.recovery_version",EXPAND(CWM_RECOVERY_VERSION) "\n" EXPAND(TARGET_DEVICE));
+    }
+    write_string_to_file("/sdcard/clockworkmod/.recovery_version",EXPAND(CWM_RECOVERY_VERSION) "\n" EXPAND(TARGET_DEVICE));
 }
 
 void toggle_ui_debugging()
@@ -139,7 +151,7 @@ int install_zip(const char* packagefilepath)
 
 #define ITEM_CHOOSE_ZIP       0
 #define ITEM_APPLY_SIDELOAD   1
-#define ITEM_APPLY_SDCARD     2
+#define ITEM_APPLY_UPDATE     2
 #define ITEM_CHOOSE_ZIP_INT   3
 
 void show_install_update_menu()
@@ -170,7 +182,7 @@ void show_install_update_menu()
         int chosen_item = get_menu_selection(headers, install_menu_items, 0, 0);
         switch (chosen_item)
         {
-            case ITEM_APPLY_SDCARD:
+            case ITEM_APPLY_UPDATE:
             {
                 if (confirm_selection("Confirm install?", "Yes - Install /sdcard/update.zip"))
                     install_zip(SDCARD_UPDATE_FILE);
@@ -178,6 +190,7 @@ void show_install_update_menu()
             }
             case ITEM_CHOOSE_ZIP:
                 show_choose_zip_menu("/sdcard/");
+                write_recovery_version();
                 break;
             case ITEM_APPLY_SIDELOAD:
                 apply_from_adb();
@@ -253,7 +266,7 @@ char** gather_files(const char* directory, const char* fileExtensionOrDirectory,
                 char fullFileName[PATH_MAX];
                 strcpy(fullFileName, directory);
                 strcat(fullFileName, de->d_name);
-                stat(fullFileName, &info);
+                lstat(fullFileName, &info);
                 // make sure it is a directory
                 if (!(S_ISDIR(info.st_mode)))
                     continue;
@@ -682,6 +695,9 @@ int control_usb_storage_for_lun(Volume* vol, bool enable) {
 #ifdef BOARD_UMS_LUNFILE
         BOARD_UMS_LUNFILE,
 #endif
+#ifdef TARGET_USE_CUSTOM_LUN_FILE_PATH
+        TARGET_USE_CUSTOM_LUN_FILE_PATH,
+#endif
         "/sys/devices/platform/usb_mass_storage/lun%d/file",
         "/sys/class/android_usb/android0/f_mass_storage/lun/file",
         "/sys/class/android_usb/android0/f_mass_storage/lun_ex/file",
@@ -829,7 +845,12 @@ int confirm_nandroid_backup(const char* title, const char* confirm)
     return chosen_item == 7;
 }
 
-void show_nandroid_advanced_backup_menu() {
+void show_nandroid_advanced_backup_menu(const char *path, int other_sd) {
+	if (ensure_path_mounted(path) != 0) {
+		LOGE ("Can't mount %s\n", path);
+		return;
+	}
+
 	static char* advancedheaders[] = { "Choose the partitions to backup.",
 					NULL
     };
@@ -893,9 +914,8 @@ void show_nandroid_advanced_backup_menu() {
 		}
 	}
 	
-	char backup_path[PATH_MAX];
-	nandroid_generate_timestamp_path(backup_path, 0);
-	return nandroid_advanced_backup(backup_path, backup_list[0], backup_list[1], backup_list[2], backup_list[3], backup_list[4], backup_list[5]);
+	nandroid_generate_timestamp_path(path, other_sd);
+	return nandroid_advanced_backup(path, backup_list[0], backup_list[1], backup_list[2], backup_list[3], backup_list[4], backup_list[5]);
 }
 
 void show_nandroid_advanced_restore_menu(const char* path)
@@ -995,16 +1015,18 @@ void show_nandroid_menu()
 
     char *other_sd = NULL;
     if(OTHER_SD_CARD == EMMC) {
-		list[6] = "backup to internal sdcard";
-		list[7] = "restore from internal sdcard";
-		list[8] = "advanced restore from internal sdcard";
-		list[9] = "delete from internal sdcard";
+		list[6] = "Backup to internal sdcard";
+		list[7] = "Restore from internal sdcard";
+		list[8] = "Delete from internal sdcard";
+		list[9] = "Advanced backup to internal sdcard";
+		list[10] = "Advanced restore from internal sdcard";
 		other_sd = "/emmc";
 	} else if (OTHER_SD_CARD == EXTERNALSD) {
-		list[6] = "backup to external sdcard";
-		list[7] = "restore from external sdcard";
-		list[8] = "advanced restore from external sdcard";
-		list[9] = "delete from external sdcard";
+		list[6] = "Backup to external sdcard";
+		list[7] = "Restore from external sdcard";
+		list[8] = "Delete from external sdcard";
+		list[9] = "Advanced backup to external sdcard";
+		list[10] = "Advanced restore from external sdcard";
 		other_sd = "/external_sd";
 	}
 #ifdef RECOVERY_EXTEND_NANDROID_MENU
@@ -1022,29 +1044,35 @@ void show_nandroid_menu()
                 {
 					nandroid_generate_timestamp_path(backup_path, 0);
                     nandroid_backup(backup_path);
+                    write_recovery_version();
 					break;
                 }
             case 1:
 				{
 					nandroid_get_backup_path(backup_path, 0);
                 	show_nandroid_restore_menu(backup_path);
+					write_recovery_version();
                 	break;
 				}
             case 2:
 				{
 					nandroid_get_backup_path(backup_path, 0);
                 	show_nandroid_delete_menu(backup_path);
+                	write_recovery_version();
                 	break;
 				}
 			case 3:
 				{
-					show_nandroid_advanced_backup_menu();
+					nandroid_get_backup_path(backup_path, 0);
+					show_nandroid_advanced_backup_menu(backup_path, 0);
+					write_recovery_version();
 					break;
 				}
             case 4:
 				{
 					nandroid_get_backup_path(backup_path, 0);
                 	show_nandroid_advanced_restore_menu(backup_path);
+                	write_recovery_version();
                 	break;
 				}
             case 5:
@@ -1054,29 +1082,41 @@ void show_nandroid_menu()
                 {
 					nandroid_generate_timestamp_path(backup_path, 1);
                     nandroid_backup(backup_path);
+                    write_recovery_version();
 					break;
                 }
             case 7:
                 if (other_sd != NULL) {
 					nandroid_get_backup_path(backup_path, 1);
                     show_nandroid_restore_menu(backup_path);
+                    write_recovery_version();
                 }
                 break;
             case 8:
                 if (other_sd != NULL) {
 					nandroid_get_backup_path(backup_path, 1);
-                    show_nandroid_advanced_restore_menu(backup_path);
+                    show_nandroid_delete_menu(backup_path);
+                    write_recovery_version();
                 }
-                break;
             case 9:
                 if (other_sd != NULL) {
 					nandroid_get_backup_path(backup_path, 1);
-                    show_nandroid_delete_menu(backup_path);
+					show_nandroid_advanced_backup_menu(backup_path, 1);
+					write_recovery_version();
+					break;
+				}
+            case 10:
+                if (other_sd != NULL) {
+					nandroid_get_backup_path(backup_path, 1);
+                    show_nandroid_advanced_restore_menu(backup_path);
+                    write_recovery_version();
                 }
+                break;
+
                 break;
             default:
 #ifdef RECOVERY_EXTEND_NANDROID_MENU
-                handle_nandroid_menu(10, chosen_item);
+                handle_nandroid_menu(11, chosen_item);
 #endif
                 break;
         }
@@ -1203,6 +1243,7 @@ void create_fstab()
     write_fstab_root("/system", file);
     write_fstab_root("/sdcard", file);
     write_fstab_root("/sd-ext", file);
+    write_fstab_root("/external_sd", file);
     fclose(file);
     LOGI("Completed outputting fstab.\n");
 }
@@ -1351,17 +1392,26 @@ int verify_root_and_recovery() {
 
     int ret = 0;
     struct stat st;
-    if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
-        if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-            ui_show_text(1);
-            ret = 1;
-            if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
-                __system("chmod -x /system/etc/install-recovery.sh");
+    // check to see if install-recovery.sh is going to clobber recovery
+    // install-recovery.sh is also used to run the su daemon on stock rom for 4.3+
+    // so verify that doesn't exist...
+    if (0 != lstat("/system/etc/.installed_su_daemon", &st)) {
+        // check install-recovery.sh exists and is executable
+        if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
+            if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+                ui_show_text(1);
+                ret = 1;
+                if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
+                    __system("chmod -x /system/etc/install-recovery.sh");
+                }
             }
         }
     }
 
+
+    int exists = 0;
     if (0 == lstat("/system/bin/su", &st)) {
+        exists = 1;
         if (S_ISREG(st.st_mode)) {
             if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
                 ui_show_text(1);
@@ -1374,6 +1424,7 @@ int verify_root_and_recovery() {
     }
 
     if (0 == lstat("/system/xbin/su", &st)) {
+        exists = 1;
         if (S_ISREG(st.st_mode)) {
             if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
                 ui_show_text(1);
@@ -1382,6 +1433,14 @@ int verify_root_and_recovery() {
                     __system("chmod 6755 /system/xbin/su");
                 }
             }
+        }
+    }
+
+    if (!exists) {
+        ui_show_text(1);
+        ret = 1;
+        if (confirm_selection("Root access is missing. Root device?", "Yes - Root device (/system/xbin/su)")) {
+            __system("/sbin/install-su.sh");
         }
     }
 

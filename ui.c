@@ -104,6 +104,7 @@ static const struct { gr_surface* surface; const char *name; } BITMAPS[] = {
     { &gBackgroundIcon[BACKGROUND_ICON_ERROR],      "icon_error" },
     { &gBackgroundIcon[BACKGROUND_ICON_CLOCKWORK],  "icon_background" },
     { &gBackgroundIcon[BACKGROUND_ICON_TSCAL],	"tscal_step" },
+    { &gBackgroundIcon[BACKGROUND_ICON_CID],  "icon_cid" },
     { &gBackgroundIcon[BACKGROUND_ICON_FIRMWARE_INSTALLING], "icon_firmware_install" },
     { &gBackgroundIcon[BACKGROUND_ICON_FIRMWARE_ERROR], "icon_firmware_error" },
     { &gMenuIcon[MENU_BACK],      "icon_back" },
@@ -300,6 +301,8 @@ static void draw_text_line(int row, const char* t, int align) {
 #define NORMAL_TEXT_COLOR 200, 200, 200, 255
 #define HEADER_TEXT_COLOR NORMAL_TEXT_COLOR
 
+int BATT_LINE, TIME_LINE, BATT_POS, TIME_POS;
+
 // Redraw everything on the screen.  Does not flip pages.
 // Should only be called with gUpdateMutex locked.
 void draw_screen_locked(void)
@@ -337,9 +340,9 @@ void draw_screen_locked(void)
 				draw_icon_locked(gMenuIcon[MENU_BACK], MENU_ICON[MENU_BACK].x, MENU_ICON[MENU_BACK].y );
 				draw_icon_locked(gMenuIcon[MENU_DOWN], MENU_ICON[MENU_DOWN].x, MENU_ICON[MENU_DOWN].y);
 				draw_icon_locked(gMenuIcon[MENU_UP], MENU_ICON[MENU_UP].x, MENU_ICON[MENU_UP].y );
-				draw_icon_locked(gMenuIcon[MENU_SELECT], MENU_ICON[MENU_SELECT].x, MENU_ICON[MENU_SELECT].y );
-            			// Setup our text colors
-            			gr_color(UICOLOR0, UICOLOR1, UICOLOR2, 255);
+				draw_icon_locked(gMenuIcon[MENU_SELECT], MENU_ICON[MENU_SELECT].x, MENU_ICON[MENU_SELECT].y ); 
+				            // Setup our text colors
+            			    gr_color(UICOLOR0, UICOLOR1, UICOLOR2, 255);
 				gr_color(UICOLOR0, UICOLOR1, UICOLOR2, 255);
 
             		gr_fill(0, (menu_top + menu_sel - menu_show_start) * CHAR_HEIGHT,
@@ -923,7 +926,7 @@ void ui_init(void)
 
 char *ui_copy_image(int icon, int *width, int *height, int *bpp) {
     pthread_mutex_lock(&gUpdateMutex);
-    draw_background_locked(gBackgroundIcon[icon]);
+    draw_background_locked(icon);
     *width = gr_fb_width();
     *height = gr_fb_height();
     *bpp = sizeof(gr_pixel) * 8;
@@ -1210,6 +1213,14 @@ void ui_reset_icons()
 	ui_init_icons();
 	update_screen_locked();
 	pthread_mutex_unlock(&gUpdateMutex);
+}
+
+void ui_cancel_wait_key() {
+    pthread_mutex_lock(&key_queue_mutex);
+    key_queue[key_queue_len] = -2;
+    key_queue_len++;
+    pthread_cond_signal(&key_queue_cond);
+    pthread_mutex_unlock(&key_queue_mutex);
 }
 
 struct keyStruct *ui_wait_key()

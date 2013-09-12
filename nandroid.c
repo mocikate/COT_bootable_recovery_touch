@@ -192,7 +192,7 @@ static int mkyaffs2image_wrapper(const char* backup_path, const char* backup_fil
 
 static int tar_compress_wrapper(const char* backup_path, const char* backup_file_image, int callback) {
     char tmp[PATH_MAX];
-    sprintf(tmp, "cd $(dirname %s) ; touch %s.tar ; (tar cv %s $(basename %s) | split -a 1 -b 1000000000 /proc/self/fd/0 %s.tar.) 2> /proc/self/fd/1 ; exit $?", backup_path, backup_file_image, strcmp(backup_path, "/data") == 0 && is_data_media() ? "--exclude 'media'" : "", backup_path, backup_file_image);
+    sprintf(tmp, "cd $(dirname %s) ; touch %s.tar ; (tar cv --exclude=data/data/com.google.android.music/files/* %s $(basename %s) | split -a 1 -b 1000000000 /proc/self/fd/0 %s.tar.) 2> /proc/self/fd/1 ; exit $?", backup_path, backup_file_image, strcmp(backup_path, "/data") == 0 && is_data_media() ? "--exclude 'media'" : "", backup_path, backup_file_image);
 
     FILE *fp = __popen(tmp, "r");
     if (fp == NULL) {
@@ -414,9 +414,10 @@ int nandroid_backup(const char* backup_path)
         volume = volume_for_path("/data");
         
     int ret;
-    struct statfs s;
+    struct statfs sfs;
+    struct stat s;
     if (NULL != volume) {
-        if (0 != (ret = statfs(volume->mount_point, &s)))
+        if (0 != (ret = statfs(volume->mount_point, &sfs)))
             return print_and_error("Unable to stat backup path.\n");
             
 		uint64_t sdcard_free_mb = recalc_sdcard_space(backup_path);
@@ -428,6 +429,7 @@ int nandroid_backup(const char* backup_path)
 		}
 	}
 	ui_set_background(BACKGROUND_ICON_INSTALLING);
+
     char tmp[PATH_MAX];
     ensure_directory(backup_path);
 
@@ -464,12 +466,10 @@ int nandroid_backup(const char* backup_path)
             return ret;
     }
 
-    if (0 != stat("/sdcard/.android_secure", &s))
-    {
+    if (is_data_media() || 0 != stat("/sdcard/.android_secure", &s)) {
         ui_print("No /sdcard/.android_secure found. Skipping backup of applications on external storage.\n");
     }
-    else
-    {
+    else {
         if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/sdcard/.android_secure", 0)))
             return ret;
     }
@@ -496,6 +496,9 @@ int nandroid_backup(const char* backup_path)
         ui_print("Error while generating md5 sum!\n");
         return ret;
     }
+    
+    sprintf(tmp, "cp /tmp/recovery.log %s/recovery.log", backup_path);
+    __system(tmp);
 
 	get_post_backup_cmd(tmp, 0);
     __system(tmp);
@@ -685,7 +688,7 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* mou
     char tmp[PATH_MAX];
     sprintf(tmp, "%s/%s.img", backup_path, name);
     struct stat file_info;
-    if (0 != (ret = statfs(tmp, &file_info))) {
+    if (0 != (ret = stat(tmp, &file_info))) {
         // can't find the backup, it may be the new backup format?
         // iterate through the backup types
         printf("couldn't find default\n");
@@ -693,19 +696,19 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* mou
         int i = 0;
         while ((filesystem = filesystems[i]) != NULL) {
             sprintf(tmp, "%s/%s.%s.img", backup_path, name, filesystem);
-            if (0 == (ret = statfs(tmp, &file_info))) {
+            if (0 == (ret = stat(tmp, &file_info))) {
                 backup_filesystem = filesystem;
                 restore_handler = unyaffs_wrapper;
                 break;
             }
             sprintf(tmp, "%s/%s.%s.tar", backup_path, name, filesystem);
-            if (0 == (ret = statfs(tmp, &file_info))) {
+            if (0 == (ret = stat(tmp, &file_info))) {
                 backup_filesystem = filesystem;
                 restore_handler = tar_extract_wrapper;
                 break;
             }
             sprintf(tmp, "%s/%s.%s.dup", backup_path, name, filesystem);
-            if (0 == (ret = statfs(tmp, &file_info))) {
+            if (0 == (ret = stat(tmp, &file_info))) {
                 backup_filesystem = filesystem;
                 restore_handler = dedupe_extract_wrapper;
                 break;
