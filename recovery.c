@@ -1095,8 +1095,8 @@ main(int argc, char **argv) {
     process_volumes();
     parse_settings();
     ui_init();
-    ui_print("\n");
-    ui_print("\n");
+    ui_print(" \n");
+    ui_print(" \n");
     ui_print("Cannibal Open Touch Recovery\n");
     ui_print("Modified by carliv@mtksoc\n");
 
