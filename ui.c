@@ -62,11 +62,11 @@ static int gShowBackButton = 0;
 #ifdef BOARD_TS_MAX_ROWS
 #define MAX_ROWS BOARD_TS_MAX_ROWS
 #else
-#define MAX_ROWS 32
+#define MAX_ROWS 30
 #endif
 
-#define MENU_MAX_COLS 76
-#define MENU_MAX_ROWS 275
+#define MENU_MAX_COLS 64
+#define MENU_MAX_ROWS 250
 
 #define MIN_LOG_ROWS 3
 
@@ -332,7 +332,7 @@ void draw_screen_locked(void)
 		if (show_text) {
 	        	gr_color(0, 0, 0, 160);
         		gr_fill(0, 0, gr_fb_width(), gr_fb_height());
-
+        		
         		int i = 0;
         		int j = 0;
         		int row = 0;            // current row that we are drawing on
@@ -386,7 +386,7 @@ void draw_screen_locked(void)
 
         	gr_color(NORMAL_TEXT_COLOR);
         	for (; row < text_rows; ++row) {
-        		draw_text_line(row, text[(row+text_top) % text_rows], LEFT_ALIGN);
+        		draw_text_line(row + 1, text[(row+text_top) % text_rows], LEFT_ALIGN);
         	}
     	}
 }

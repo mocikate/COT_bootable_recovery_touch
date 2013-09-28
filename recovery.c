@@ -1095,10 +1095,9 @@ main(int argc, char **argv) {
     process_volumes();
     parse_settings();
     ui_init();
-    ui_print(" \n");
-    ui_print(" \n");
     ui_print("Cannibal Open Touch Recovery\n");
-    ui_print("Modified by carliv@mtksoc\n");
+    ui_print("Modified by carliv@xda\n");
+    ui_print(" \n");
 
     LOGI("Processing arguments.\n");
     get_args(&argc, &argv);
