@@ -218,9 +218,9 @@ void show_settings_menu() {
     list[0] = "Language";
     list[1] = "Theme";
     if (backupfmt == 0) {
-		list[2] = "Choose Backup Format (currently dup)";
+		list[2] = "Choose Backup Format (now dup)";
 	} else {
-		list[2] = "Choose Backup Format (currently tar)";
+		list[2] = "Choose Backup Format (now tar)";
 	}
     if (orsreboot == 1) {
 		list[3] = "Disable forced reboots";
@@ -253,9 +253,8 @@ void show_settings_menu() {
             case SETTINGS_ITEM_THEME:
             {
                 static char* ui_colors[] = {"Hydro (default)",
-                                                    "Blood Red",
-                                                    "Custom Theme (sdcard)",
-                                                    NULL
+											"Custom Theme (sdcard)",
+											 NULL
                 };
                 static char* ui_header[] = {"COT Theme", "", NULL};
 
@@ -269,10 +268,6 @@ void show_settings_menu() {
                             is_sd_theme = 0;
                             break;
                         case 1:
-                            currenttheme = "bloodred";
-							is_sd_theme = 0;
-                            break;
-                        case 2:
 							currenttheme = "custom";
 							is_sd_theme = 1;
 							break;

@@ -301,8 +301,6 @@ static void draw_text_line(int row, const char* t, int align) {
 #define NORMAL_TEXT_COLOR 200, 200, 200, 255
 #define HEADER_TEXT_COLOR NORMAL_TEXT_COLOR
 
-int BATT_LINE, TIME_LINE, BATT_POS, TIME_POS;
-
 // Redraw everything on the screen.  Does not flip pages.
 // Should only be called with gUpdateMutex locked.
 void draw_screen_locked(void)
@@ -333,6 +331,7 @@ void draw_screen_locked(void)
 	        	gr_color(0, 0, 0, 160);
         		gr_fill(0, 0, gr_fb_width(), gr_fb_height());
         		
+        		int total_rows = gr_fb_height() / CHAR_HEIGHT+1;
         		int i = 0;
         		int j = 0;
         		int row = 0;            // current row that we are drawing on
@@ -375,6 +374,8 @@ void draw_screen_locked(void)
                     			draw_text_line(i - menu_show_start, menu[i], LEFT_ALIGN);
                 		}
                 		row++;
+                		if (row >= max_menu_rows)
+		                    break;
             		}
             		gr_fill(0, row*CHAR_HEIGHT+CHAR_HEIGHT/2-1,
 #ifdef BUILD_IN_LANDSCAPE

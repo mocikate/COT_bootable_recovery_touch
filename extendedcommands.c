@@ -156,7 +156,7 @@ int install_zip(const char* packagefilepath)
 
 void show_install_update_menu()
 {
-    static char* headers[] = {  "ZIP Flashing",
+    static char* headers[] = {  "Install ZIP",
                                 "",
                                 NULL
     };
@@ -410,8 +410,8 @@ void show_choose_zip_menu(const char *mount_point)
     }
     
     static char *INSTALL_OR_BACKUP_ITEMS[] = { "Yes - Backup and install",
-												"No - Install without backup",
-												"Cancel Install",
+                                               "No - Install without backup",
+											   "Cancel Install",
 												NULL};
 												
 	#define ITEM_BACKUP_AND_INSTALL 0
@@ -701,6 +701,7 @@ int control_usb_storage_for_lun(Volume* vol, bool enable) {
         "/sys/devices/platform/usb_mass_storage/lun%d/file",
         "/sys/class/android_usb/android0/f_mass_storage/lun/file",
         "/sys/class/android_usb/android0/f_mass_storage/lun_ex/file",
+        "/sys/devices/platform/mt_usb/gadget/lun%d/file",
         NULL
     };
 
